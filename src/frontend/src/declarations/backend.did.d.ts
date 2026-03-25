@@ -22,6 +22,10 @@ export interface DriverProfile {
 export type DriverStatus = { 'pending' : null } |
   { 'approved' : null } |
   { 'rejected' : null };
+export interface DriverWithPrincipal {
+  'principal' : Principal,
+  'profile' : DriverProfile,
+}
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
@@ -30,12 +34,12 @@ export type VehicleType = { 'bicycle' : null } |
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'getAllDrivers' : ActorMethod<[], Array<DriverProfile>>,
-  'getCallerDriverProfile' : ActorMethod<[], DriverProfile>,
+  'getAllDriversWithPrincipals' : ActorMethod<[], Array<DriverWithPrincipal>>,
+  'getCallerDriverProfile' : ActorMethod<[], [] | [DriverProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getDriverProfile' : ActorMethod<[Principal], DriverProfile>,
+  'getDriverProfile' : ActorMethod<[Principal], [] | [DriverProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'registerDriver' : ActorMethod<[], undefined>,
+  'registerDriver' : ActorMethod<[DriverProfile], undefined>,
   'saveDriverProfile' : ActorMethod<[DriverProfile], undefined>,
   'updateDriverStatus' : ActorMethod<[Principal, DriverStatus], undefined>,
 }

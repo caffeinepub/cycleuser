@@ -21,7 +21,7 @@ import {
 import { motion } from "motion/react";
 import { toast } from "sonner";
 import type { Page } from "../App";
-import { type DriverProfile, DriverStatus } from "../backend";
+import { DriverStatus, type DriverWithPrincipal } from "../backend";
 import { useInternetIdentity } from "../hooks/useInternetIdentity";
 import {
   useAllDrivers,
@@ -46,24 +46,23 @@ export default function AdminDashboard({ navigate }: Props) {
   const { identity, clear } = useInternetIdentity();
   const { data: isAdmin, isLoading: checkingAdmin } = useIsAdmin();
   const { data: drivers, isLoading: loadingDrivers } = useAllDrivers();
+  const updateStatus = useUpdateDriverStatus();
 
   const handleLogout = () => {
     clear();
     navigate("landing");
   };
 
-  const handleStatusUpdate = async (
-    driver: DriverProfile,
+  const handleStatusUpdate = (
+    driverEntry: DriverWithPrincipal,
     status: DriverStatus,
   ) => {
-    // We don't have a direct principal per driver in the list; backend returns profiles without principal
-    // We'll need to use a workaround: re-use identity principal for demonstration
-    // In production the getAllDrivers should return principals too
-    toast.info(`Status update for ${driver.name} requested (${status}).`);
-    // Since the backend getAllDrivers doesn't return Principal, we can't call updateDriverStatus directly
-    // This is a backend limitation. We show the intent:
-    toast.warning(
-      "Note: Driver principal required for status update. Contact backend support.",
+    updateStatus.mutate(
+      { driver: driverEntry.principal, status },
+      {
+        onSuccess: () => toast.success(`Driver ${status} successfully.`),
+        onError: () => toast.error("Failed to update driver status."),
+      },
     );
   };
 
@@ -119,11 +118,14 @@ export default function AdminDashboard({ navigate }: Props) {
   }
 
   const pendingCount =
-    drivers?.filter((d) => d.status === DriverStatus.pending).length ?? 0;
+    drivers?.filter((d) => d.profile.status === DriverStatus.pending).length ??
+    0;
   const approvedCount =
-    drivers?.filter((d) => d.status === DriverStatus.approved).length ?? 0;
+    drivers?.filter((d) => d.profile.status === DriverStatus.approved).length ??
+    0;
   const rejectedCount =
-    drivers?.filter((d) => d.status === DriverStatus.rejected).length ?? 0;
+    drivers?.filter((d) => d.profile.status === DriverStatus.rejected).length ??
+    0;
 
   return (
     <div className="min-h-screen bg-background">
@@ -228,57 +230,59 @@ export default function AdminDashboard({ navigate }: Props) {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {drivers.map((driver, i) => (
+                  {drivers.map((driverEntry, i) => (
                     <TableRow
-                      key={`${driver.email}-${i}`}
+                      key={`${driverEntry.profile.email}-${i}`}
                       data-ocid={`admin.row.${i + 1}`}
                     >
                       <TableCell className="font-medium">
-                        {driver.name}
+                        {driverEntry.profile.name}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {driver.email}
+                        {driverEntry.profile.email}
                       </TableCell>
                       <TableCell className="text-muted-foreground">
-                        {driver.phone}
+                        {driverEntry.profile.phone}
                       </TableCell>
-                      <TableCell>{driver.city}</TableCell>
+                      <TableCell>{driverEntry.profile.city}</TableCell>
                       <TableCell className="capitalize">
-                        {driver.vehicleType}
+                        {driverEntry.profile.vehicleType}
                       </TableCell>
                       <TableCell>
-                        <StatusBadge status={driver.status} />
+                        <StatusBadge status={driverEntry.profile.status} />
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center justify-end gap-2">
-                          {driver.status !== DriverStatus.approved && (
+                          {driverEntry.profile.status !==
+                            DriverStatus.approved && (
                             <Button
                               size="sm"
                               className="bg-green-600 hover:bg-green-700 text-white h-7 gap-1"
                               onClick={() =>
                                 handleStatusUpdate(
-                                  driver,
+                                  driverEntry,
                                   DriverStatus.approved,
                                 )
                               }
-                              disabled={false}
+                              disabled={updateStatus.isPending}
                               data-ocid={`admin.confirm_button.${i + 1}`}
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" /> Approve
                             </Button>
                           )}
-                          {driver.status !== DriverStatus.rejected && (
+                          {driverEntry.profile.status !==
+                            DriverStatus.rejected && (
                             <Button
                               size="sm"
                               variant="outline"
                               className="border-red-200 text-red-600 hover:bg-red-50 h-7 gap-1"
                               onClick={() =>
                                 handleStatusUpdate(
-                                  driver,
+                                  driverEntry,
                                   DriverStatus.rejected,
                                 )
                               }
-                              disabled={false}
+                              disabled={updateStatus.isPending}
                               data-ocid={`admin.delete_button.${i + 1}`}
                             >
                               <XCircle className="w-3.5 h-3.5" /> Reject

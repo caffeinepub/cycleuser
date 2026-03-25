@@ -16,6 +16,10 @@ export interface DriverProfile {
     licenseNumber: string;
     phone: string;
 }
+export interface DriverWithPrincipal {
+    principal: Principal;
+    profile: DriverProfile;
+}
 export enum DriverStatus {
     pending = "pending",
     approved = "approved",
@@ -32,12 +36,12 @@ export enum VehicleType {
 }
 export interface backendInterface {
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
-    getAllDrivers(): Promise<Array<DriverProfile>>;
-    getCallerDriverProfile(): Promise<DriverProfile>;
+    getAllDriversWithPrincipals(): Promise<Array<DriverWithPrincipal>>;
+    getCallerDriverProfile(): Promise<DriverProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
-    getDriverProfile(user: Principal): Promise<DriverProfile>;
+    getDriverProfile(user: Principal): Promise<DriverProfile | null>;
     isCallerAdmin(): Promise<boolean>;
-    registerDriver(): Promise<void>;
+    registerDriver(emptyProfile: DriverProfile): Promise<void>;
     saveDriverProfile(profile: DriverProfile): Promise<void>;
     updateDriverStatus(driver: Principal, status: DriverStatus): Promise<void>;
 }

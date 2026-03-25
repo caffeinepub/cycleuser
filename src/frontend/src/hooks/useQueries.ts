@@ -1,6 +1,11 @@
 import type { Principal } from "@icp-sdk/core/principal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { type DriverProfile, type DriverStatus, UserRole } from "../backend";
+import {
+  type DriverProfile,
+  type DriverStatus,
+  type DriverWithPrincipal,
+  UserRole,
+} from "../backend";
 import { useActor } from "./useActor";
 
 export function useCallerRole() {
@@ -33,11 +38,7 @@ export function useDriverProfile() {
     queryKey: ["driverProfile"],
     queryFn: async () => {
       if (!actor) return null;
-      try {
-        return await actor.getCallerDriverProfile();
-      } catch {
-        return null;
-      }
+      return actor.getCallerDriverProfile();
     },
     enabled: !!actor && !isFetching,
   });
@@ -45,11 +46,11 @@ export function useDriverProfile() {
 
 export function useAllDrivers() {
   const { actor, isFetching } = useActor();
-  return useQuery<DriverProfile[]>({
+  return useQuery<DriverWithPrincipal[]>({
     queryKey: ["allDrivers"],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllDrivers();
+      return actor.getAllDriversWithPrincipals();
     },
     enabled: !!actor && !isFetching,
   });
@@ -61,7 +62,11 @@ export function useSaveDriverProfile() {
   return useMutation({
     mutationFn: async (profile: DriverProfile) => {
       if (!actor) throw new Error("Not connected");
-      await actor.registerDriver();
+      try {
+        await actor.registerDriver(profile);
+      } catch {
+        // already registered, continue
+      }
       await actor.saveDriverProfile(profile);
     },
     onSuccess: () => {

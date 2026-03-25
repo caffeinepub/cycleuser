@@ -1,24 +1,23 @@
 # CycleUser
 
 ## Current State
-New project. Empty backend and frontend scaffolding.
+The app has a landing page for driver registration, a driver dashboard, and an admin dashboard. The admin dashboard has Approve/Reject buttons but they don't actually call the backend — `handleStatusUpdate` only shows warning toasts because `getAllDrivers` returns `[DriverProfile]` without Principal IDs, making it impossible to call `updateDriverStatus`.
 
 ## Requested Changes (Diff)
 
 ### Add
-- Driver registration page with a form (name, phone, email, vehicle type, license number)
-- Driver login / profile view
-- Admin dashboard to view registered drivers
-- Link/button to cycleride-vs0.caffeine.xyz (the main ride platform)
-- Role-based access: drivers and admin
+- Backend: `getAllDriversWithPrincipals` query that returns `[(Principal, DriverProfile)]`
+- Admin dashboard: actual approve/reject mutation using `useUpdateDriverStatus`
 
 ### Modify
-- N/A
+- Backend `getAllDrivers` -> return principal alongside profile
+- AdminDashboard `handleStatusUpdate` -> call real backend mutation
+- `useAllDrivers` hook -> use new endpoint that returns principals
 
 ### Remove
-- N/A
+- Warning toast in `handleStatusUpdate` about missing principal
 
 ## Implementation Plan
-1. Select authorization component for role-based access (admin + driver roles)
-2. Generate Motoko backend with driver profile storage, registration, and admin listing
-3. Build frontend: landing/home page, driver register form, driver profile page, admin driver list, navigation with link to cycleride site
+1. Regenerate Motoko backend with `getAllDriversWithPrincipals` returning `[(Principal, DriverProfile)]`
+2. Update `useAllDrivers` hook to use new endpoint and store `{principal, ...profile}` shape
+3. Fix `AdminDashboard` to call `useUpdateDriverStatus` with real principal

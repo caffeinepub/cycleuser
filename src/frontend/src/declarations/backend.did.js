@@ -31,16 +31,28 @@ export const DriverProfile = IDL.Record({
   'licenseNumber' : IDL.Text,
   'phone' : IDL.Text,
 });
+export const DriverWithPrincipal = IDL.Record({
+  'principal' : IDL.Principal,
+  'profile' : DriverProfile,
+});
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-  'getAllDrivers' : IDL.Func([], [IDL.Vec(DriverProfile)], ['query']),
-  'getCallerDriverProfile' : IDL.Func([], [DriverProfile], ['query']),
+  'getAllDriversWithPrincipals' : IDL.Func(
+      [],
+      [IDL.Vec(DriverWithPrincipal)],
+      ['query'],
+    ),
+  'getCallerDriverProfile' : IDL.Func([], [IDL.Opt(DriverProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-  'getDriverProfile' : IDL.Func([IDL.Principal], [DriverProfile], ['query']),
+  'getDriverProfile' : IDL.Func(
+      [IDL.Principal],
+      [IDL.Opt(DriverProfile)],
+      ['query'],
+    ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'registerDriver' : IDL.Func([], [], []),
+  'registerDriver' : IDL.Func([DriverProfile], [], []),
   'saveDriverProfile' : IDL.Func([DriverProfile], [], []),
   'updateDriverStatus' : IDL.Func([IDL.Principal, DriverStatus], [], []),
 });
@@ -71,16 +83,32 @@ export const idlFactory = ({ IDL }) => {
     'licenseNumber' : IDL.Text,
     'phone' : IDL.Text,
   });
+  const DriverWithPrincipal = IDL.Record({
+    'principal' : IDL.Principal,
+    'profile' : DriverProfile,
+  });
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
-    'getAllDrivers' : IDL.Func([], [IDL.Vec(DriverProfile)], ['query']),
-    'getCallerDriverProfile' : IDL.Func([], [DriverProfile], ['query']),
+    'getAllDriversWithPrincipals' : IDL.Func(
+        [],
+        [IDL.Vec(DriverWithPrincipal)],
+        ['query'],
+      ),
+    'getCallerDriverProfile' : IDL.Func(
+        [],
+        [IDL.Opt(DriverProfile)],
+        ['query'],
+      ),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
-    'getDriverProfile' : IDL.Func([IDL.Principal], [DriverProfile], ['query']),
+    'getDriverProfile' : IDL.Func(
+        [IDL.Principal],
+        [IDL.Opt(DriverProfile)],
+        ['query'],
+      ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'registerDriver' : IDL.Func([], [], []),
+    'registerDriver' : IDL.Func([DriverProfile], [], []),
     'saveDriverProfile' : IDL.Func([DriverProfile], [], []),
     'updateDriverStatus' : IDL.Func([IDL.Principal, DriverStatus], [], []),
   });
